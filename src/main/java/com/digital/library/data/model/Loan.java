@@ -1,11 +1,13 @@
 package com.digital.library.data.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDate;
 
 @Entity
@@ -13,7 +15,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class Loan {
+public class Loan implements Serializable {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
     @Column(name = "id")
@@ -21,12 +23,14 @@ public class Loan {
 
     @NonNull
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "bookId", referencedColumnName = "id")
+    @JoinColumn(name = "book_id", referencedColumnName = "id")
+    @JsonIgnoreProperties("loan")
     private Book book;
 
     @NonNull
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "usermemberId", referencedColumnName = "id")
+    @JoinColumn(name = "usermember_id", referencedColumnName = "id")
+    @JsonIgnoreProperties("loan")
     private UserMember usermember;
 
     @NonNull

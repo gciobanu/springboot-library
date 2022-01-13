@@ -1,27 +1,29 @@
 package com.digital.library.data.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.*;
 
 import javax.persistence.*;
-import java.util.List;
+import java.io.Serializable;
+import java.util.Set;
 
 @Entity
 @Table(name = "category")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class Category {
+@EqualsAndHashCode(exclude = "bookSet")
+public class Category implements Serializable {
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    private Integer categoryId;
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    private Integer id;
+
     @NonNull
+    @Column(name = "name")
     private String name;
 
-    //@OneToMany(cascade = CascadeType.ALL, mappedBy = "category")
-    @ManyToOne
-    @JoinColumn(name = "id", nullable = false)
-    private Book book;
+    @ManyToMany(mappedBy = "categorySet")
+    @JsonIgnoreProperties("categorySet")
+    private Set<Book> bookSet;
+
 }

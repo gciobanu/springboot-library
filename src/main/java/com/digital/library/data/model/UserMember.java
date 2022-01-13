@@ -1,19 +1,20 @@
 package com.digital.library.data.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.*;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "usermember")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class UserMember {
+@EqualsAndHashCode(exclude = "loan")
+public class UserMember implements Serializable {
     @Id
+    @NonNull
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
     @NonNull
@@ -21,6 +22,7 @@ public class UserMember {
     @NonNull
     private String surname;
 
-    @OneToOne(mappedBy = "usermember")
+    @OneToOne(mappedBy = "usermember", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("usermember")
     private Loan loan;
 }

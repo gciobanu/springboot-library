@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -20,6 +21,6 @@ public class BookRequest {
     @NotBlank
     private String author;
     @NotNull
-    @NotBlank
+    @NotEmpty
     private List<Category> categories;
 }
