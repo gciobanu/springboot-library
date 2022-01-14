@@ -5,15 +5,18 @@ import com.digital.library.data.model.Book;
 import com.digital.library.data.model.Loan;
 import com.digital.library.data.model.UserMember;
 import com.digital.library.data.payloads.LoanRequest;
+import com.digital.library.data.payloads.ReturnLoanRequest;
 import com.digital.library.data.repository.BookRepository;
 import com.digital.library.data.repository.LoanRepository;
 import com.digital.library.data.repository.UserMemberRepository;
+import com.digital.library.exceptions.ApiException;
 import com.digital.library.exceptions.OutstandingBookException;
 import com.digital.library.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,28 +33,61 @@ public class LoanServiceImpl implements LoanService {
     private static final int MAX_DAYS_ALLOWED_FOR_LOAN = 30; //just an example
 
     @Override
-    public void loanBook(LoanRequest loanRequest) throws OutstandingBookException, ResourceNotFoundException {
+    public void loanBook(LoanRequest loanRequest) throws OutstandingBookException, ResourceNotFoundException, ApiException {
         UserMember userMember = this.getUserMemberById(loanRequest.getUserMember().getId());
-        List<Book> books = loanRequest.getBooks();
 
-        for (Book book: books) {
-            // does book exists ?
-            // maybe use a code (to add in entity) for identifying the book here instead of ID?
-            book = this.checkBookExistsById(book.getId());
+        if (!this.isOutstandingLoanForUserMember(userMember)) {
+            List<Book> books = loanRequest.getBooks();
 
-            Loan newBookLoan = new Loan();
-            newBookLoan.setBook(book);
-            newBookLoan.setUsermember(userMember);
-            newBookLoan.setLoanDate(LocalDate.now());
+            for (Book book: books) {
+                // does book exists ?
+                // maybe use a code (to add in entity) for identifying the book here instead of ID?
+                book = this.checkBookExistsById(book.getId());
 
-            loanRepository.save(newBookLoan);
+                Loan newBookLoan = new Loan();
+                newBookLoan.setBook(book);
+                newBookLoan.setUsermember(userMember);
+                newBookLoan.setLoanDate(LocalDate.now());
+
+                try {
+                    loanRepository.save(newBookLoan);
+                } catch (Exception e) {
+                    throw new ApiException("Error loaning the book with ID: " + book.getId());
+                }
+
+            }
         }
-
     }
 
     @Override
-    public void returnBook(LoanRequest loanRequest) throws ResourceNotFoundException {
+    public void returnBook(ReturnLoanRequest loanRequest) throws ResourceNotFoundException, ApiException {
+        UserMember userMember = this.getUserMemberById(loanRequest.getUserMember().getId());
 
+        List<Loan> outstandingLoan = loanRepository.findByUsermemberAndReturnDateIsNull(userMember);
+        List<Loan> returnLoans = new ArrayList<>();
+
+        for (Loan loan : outstandingLoan) {
+            for (Book book : loanRequest.getBooks()) {
+                if (loan.getBook().getId() == book.getId()) {
+                    loan.setReturnDate(LocalDate.now());
+                    returnLoans.add(loan);
+                }
+            }
+        }
+
+        // books for return may not be valid (no corresponding "open" loan)
+        if (returnLoans.isEmpty()) {
+            throw new ResourceNotFoundException(
+                    ResourceType.BOOK.toString(),
+                    "id",
+                    loanRequest.getBooks().toString());
+        }
+
+        try {
+            loanRepository.saveAll(returnLoans);
+        } catch (Exception e) {
+            throw new ApiException("Error on books return!");
+        }
     }
 
     /**
@@ -81,9 +117,9 @@ public class LoanServiceImpl implements LoanService {
      * @return boolean false if no outstanding loan or if number of maximum allowed books is not reached
      * @throws OutstandingBookException
      */
-    private boolean checkOutstandingLoansForUserMember(UserMember userMember) throws OutstandingBookException {
+    private boolean isOutstandingLoanForUserMember(UserMember userMember) throws OutstandingBookException {
         // check is valid for new book loan ?
-        List<Loan> outstandingLoan = loanRepository.findByUserMemberAndReturnDateIsNull(userMember);
+        List<Loan> outstandingLoan = loanRepository.findByUsermemberAndReturnDateIsNull(userMember);
 
         if (outstandingLoan != null && outstandingLoan.size() >= MAX_BOOKS_NO_IN_LOAN) {
             //TODO new exception type for this case  ?
@@ -91,7 +127,7 @@ public class LoanServiceImpl implements LoanService {
         }
 
         for (Loan loan : outstandingLoan) {
-            // check loan date has more than 30 days + 1 passed (+1 to allow returning and new loan on the 30th day)
+            // check each loan date if it has more than 30 days + 1 passed (+1 to allow returning and new loan on the 30th day)
             // if any outstanding book after 30 days, do not allow new loan
             if (loan.getLoanDate().plusDays(MAX_DAYS_ALLOWED_FOR_LOAN).isBefore(LocalDate.now().plusDays(1))) {
                 throw new OutstandingBookException("This user member has outstanding books to return!");

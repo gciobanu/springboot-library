@@ -1,6 +1,8 @@
 package com.digital.library.service;
 
 import com.digital.library.data.payloads.LoanRequest;
+import com.digital.library.data.payloads.ReturnLoanRequest;
+import com.digital.library.exceptions.ApiException;
 import com.digital.library.exceptions.OutstandingBookException;
 import com.digital.library.exceptions.ResourceNotFoundException;
 import org.springframework.stereotype.Component;
@@ -8,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public interface LoanService {
 
-    void loanBook(LoanRequest loanRequest) throws OutstandingBookException, ResourceNotFoundException;
+    void loanBook(LoanRequest loanRequest) throws OutstandingBookException, ResourceNotFoundException, ApiException;
 
-    void returnBook(LoanRequest loanRequest) throws ResourceNotFoundException;
+    void returnBook(ReturnLoanRequest loanRequest) throws ResourceNotFoundException, ApiException;
 }

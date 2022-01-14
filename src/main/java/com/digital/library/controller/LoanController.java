@@ -3,6 +3,7 @@ package com.digital.library.controller;
 import com.digital.library.data.payloads.LoanRequest;
 import com.digital.library.data.payloads.MessageResponse;
 import com.digital.library.data.payloads.ReturnLoanRequest;
+import com.digital.library.exceptions.ApiException;
 import com.digital.library.exceptions.OutstandingBookException;
 import com.digital.library.exceptions.ResourceNotFoundException;
 import com.digital.library.service.LoanService;
@@ -31,9 +32,11 @@ public class LoanController {
         try {
             this.loanService.loanBook(request);
         } catch (OutstandingBookException e) {
-            return new ResponseEntity<>(new MessageResponse("You have outstanding book(s) to return!"), HttpStatus.CONFLICT);
+            return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.CONFLICT);
         } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<>(new MessageResponse("Book or user member not found."), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
+        } catch (ApiException e) {
+            return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         return new ResponseEntity<>(new MessageResponse("Book(s) loaned."), HttpStatus.CREATED);
@@ -44,9 +47,11 @@ public class LoanController {
         try {
             this.loanService.returnBook(request);
         } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<>(new MessageResponse("Book or user member not found."), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
+        } catch (ApiException e) {
+            return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(new MessageResponse("Book(s) return."), HttpStatus.CREATED);
+        return new ResponseEntity<>(new MessageResponse("Book(s) return confirmed."), HttpStatus.CREATED);
     }
 }
