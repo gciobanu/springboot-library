@@ -2,7 +2,7 @@ package com.digital.library.data;
 
 public enum ResourceType {
     BOOK("Book"),
-    USER("User"),
+    USER("Usermember"),
     LOAN("Loan");
 
     public final String label;

@@ -22,6 +22,12 @@ public class LoanController {
 
     @PostMapping("/new")
     public ResponseEntity<MessageResponse> loanBook(@RequestBody LoanRequest request) {
+        if (request == null) {
+            return new ResponseEntity<>(new MessageResponse("No request data was sent!"), HttpStatus.BAD_REQUEST);
+        }
+        if (request.getUserMember().getId() == null) {
+            return new ResponseEntity<>(new MessageResponse("No user member ID was sent!"), HttpStatus.BAD_REQUEST);
+        }
         try {
             this.loanService.loanBook(request);
         } catch (OutstandingBookException e) {
