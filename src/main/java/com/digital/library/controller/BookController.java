@@ -3,6 +3,7 @@ package com.digital.library.controller;
 import com.digital.library.data.model.Book;
 import com.digital.library.data.payloads.BookRequest;
 import com.digital.library.data.payloads.MessageResponse;
+import com.digital.library.data.payloads.SearchResponse;
 import com.digital.library.exceptions.ApiException;
 import com.digital.library.exceptions.ResourceNotFoundException;
 import com.digital.library.service.BookService;
@@ -11,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.websocket.server.PathParam;
 import java.util.List;
 
 @RestController
@@ -34,14 +34,17 @@ public class BookController {
         }
     }
 
-    //TODO find book by category
-
-    //TODO find book by title and author
+    // find book by title and/or author
     @GetMapping("/search")
-    public ResponseEntity<List<Book>> search(@PathParam("query") String queryString) {
-        //List<Book> results = this.bookService.search(queryString);
-        //return new ResponseEntity<>(results, HttpStatus.OK);
-        return null;
+    public ResponseEntity<SearchResponse> search(
+            @RequestParam("title") String title,
+            @RequestParam("author") String author,
+            @RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(defaultValue = "title") String sortBy
+    ) {
+        SearchResponse results = bookService.search(title, author, pageNo, pageSize, sortBy);
+        return new ResponseEntity<>(results, HttpStatus.OK);
     }
 
     @PostMapping("/new")

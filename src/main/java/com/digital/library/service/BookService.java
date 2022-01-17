@@ -2,8 +2,8 @@ package com.digital.library.service;
 
 import com.digital.library.data.model.Book;
 import com.digital.library.data.payloads.BookRequest;
-import com.digital.library.data.payloads.CategoryRequest;
 import com.digital.library.data.payloads.MessageResponse;
+import com.digital.library.data.payloads.SearchResponse;
 import com.digital.library.exceptions.ApiException;
 import com.digital.library.exceptions.ResourceNotFoundException;
 import org.springframework.stereotype.Component;
@@ -21,9 +21,7 @@ public interface BookService {
 
     Book findById(Integer bookId) throws ResourceNotFoundException;
 
-    List<Book> search(String query);
-
-    List<Book> findByCategory(CategoryRequest category);
+    SearchResponse search(String title, String author, Integer pageNo, Integer pageSize, String sortBy);
 
     List<Book> findAll();
 

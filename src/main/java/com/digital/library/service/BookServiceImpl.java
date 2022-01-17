@@ -3,12 +3,16 @@ package com.digital.library.service;
 import com.digital.library.data.ResourceType;
 import com.digital.library.data.model.Book;
 import com.digital.library.data.payloads.BookRequest;
-import com.digital.library.data.payloads.CategoryRequest;
 import com.digital.library.data.payloads.MessageResponse;
+import com.digital.library.data.payloads.SearchResponse;
 import com.digital.library.data.repository.BookRepository;
 import com.digital.library.exceptions.ApiException;
 import com.digital.library.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -24,7 +28,7 @@ public class BookServiceImpl implements BookService {
             Book newBook = new Book();
             newBook.setAuthor(book.getAuthor());
             newBook.setTitle(book.getTitle());
-            newBook.setCategorySet(new HashSet<>(newBook.getCategorySet()));
+            newBook.setCategorySet(new HashSet<>(book.getCategories()));
 
             return bookRepository.save(newBook);
         } catch (Exception e) {
@@ -77,17 +81,26 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public List<Book> findByCategory(CategoryRequest category) {
-        //TODO
-        //this.bookRepository.findByCategory(new Category(category.getCategoryId(), category.getName()));
-        // or just filter by id or by name
-        return null;
-    }
+    public SearchResponse search(String title, String author, Integer pageNo, Integer pageSize, String sortBy) {
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by(sortBy).ascending());
 
-    @Override
-    public List<Book> search(String query) {
-        //TODO
-        return null;
+        Page<Book> pagedResult = this.bookRepository.findByTitleOrAuthorContains(title, author, paging);
+
+        SearchResponse.SearchResponseBuilder response = SearchResponse.builder();
+
+        if(pagedResult.hasContent()) {
+            response.books(pagedResult.getContent())
+                    .numberOfPages(pagedResult.getTotalPages())
+                    .numberOfResults(pagedResult.getNumberOfElements());
+
+
+        } else {
+            response.books(new ArrayList<Book>())
+                    .numberOfPages(0)
+                    .numberOfResults(0);
+        }
+
+        return response.build();
     }
 
     @Override
