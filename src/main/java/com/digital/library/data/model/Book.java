@@ -13,6 +13,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Data
 @EqualsAndHashCode(exclude = {"categorySet", "loan"})
+@JsonIgnoreProperties(value = { "loan" })
 public class Book implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,7 +31,7 @@ public class Book implements Serializable {
     @JsonIgnoreProperties("bookSet")
     private Set<Category> categorySet;
 
-    @OneToOne(mappedBy = "book", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "book")
     @JsonIgnoreProperties("book")
     private Loan loan;
 }

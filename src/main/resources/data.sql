@@ -32,6 +32,4 @@ VALUES (2, 'Jane', 'Doe');
 INSERT INTO usermember(id, firstname, surname)
 VALUES (3, 'Johnny', 'Kid');
 
-INSERT INTO loan(id, book_id, usermember_id)
-VALUES (1, 1, 2);
 

@@ -13,6 +13,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Data
 @EqualsAndHashCode(exclude = "bookSet")
+@JsonIgnoreProperties(value = { "bookSet" })
 public class Category implements Serializable {
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)

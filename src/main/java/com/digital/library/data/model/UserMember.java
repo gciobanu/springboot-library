@@ -5,6 +5,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Set;
 
 @Entity
 @Table(name = "usermember")
@@ -12,6 +13,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Data
 @EqualsAndHashCode(exclude = "loan")
+@JsonIgnoreProperties(value = { "loanSet" })
 public class UserMember implements Serializable {
     @Id
     @NonNull
@@ -22,7 +24,7 @@ public class UserMember implements Serializable {
     @NonNull
     private String surname;
 
-    @OneToOne(mappedBy = "usermember", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "usermember")//, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("usermember")
-    private Loan loan;
+    private Set<Loan> loanSet;
 }

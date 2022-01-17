@@ -42,16 +42,17 @@ public class LoanServiceImpl implements LoanService {
             for (Book book: books) {
                 // does book exists ?
                 // maybe use a code (to add in entity) for identifying the book here instead of ID?
-                book = this.checkBookExistsById(book.getId());
+                Book existingBook = this.checkBookExistsById(book.getId());
 
                 Loan newBookLoan = new Loan();
-                newBookLoan.setBook(book);
+                newBookLoan.setBook(existingBook);
                 newBookLoan.setUsermember(userMember);
                 newBookLoan.setLoanDate(LocalDate.now());
 
                 try {
                     loanRepository.save(newBookLoan);
                 } catch (Exception e) {
+                    //e.printStackTrace();
                     throw new ApiException("Error loaning the book with ID: " + book.getId());
                 }
 
@@ -121,6 +122,10 @@ public class LoanServiceImpl implements LoanService {
         // check is valid for new book loan ?
         List<Loan> outstandingLoan = loanRepository.findByUsermemberAndReturnDateIsNull(userMember);
 
+        if (outstandingLoan == null || outstandingLoan.isEmpty()) {
+            return false;
+        }
+
         if (outstandingLoan != null && outstandingLoan.size() >= MAX_BOOKS_NO_IN_LOAN) {
             //TODO new exception type for this case  ?
             throw new OutstandingBookException("No more than " + MAX_BOOKS_NO_IN_LOAN + " books are allowed!");
@@ -129,7 +134,8 @@ public class LoanServiceImpl implements LoanService {
         for (Loan loan : outstandingLoan) {
             // check each loan date if it has more than 30 days + 1 passed (+1 to allow returning and new loan on the 30th day)
             // if any outstanding book after 30 days, do not allow new loan
-            if (loan.getLoanDate().plusDays(MAX_DAYS_ALLOWED_FOR_LOAN).isBefore(LocalDate.now().plusDays(1))) {
+            if (loan != null && loan.getLoanDate() != null &&
+                    loan.getLoanDate().plusDays(MAX_DAYS_ALLOWED_FOR_LOAN).isBefore(LocalDate.now().plusDays(1))) {
                 throw new OutstandingBookException("This user member has outstanding books to return!");
             }
         }
@@ -143,7 +149,7 @@ public class LoanServiceImpl implements LoanService {
      * @return Book
      * @throws ResourceNotFoundException
      */
-    private Book checkBookExistsById(Integer bookId) throws ResourceNotFoundException {
+    private Book checkBookExistsById(Integer bookId) throws ResourceNotFoundException, OutstandingBookException {
         if (bookId == null) {
             throw new ResourceNotFoundException( //todo new custom bad request exception?
                     ResourceType.BOOK.toString(),
@@ -157,6 +163,12 @@ public class LoanServiceImpl implements LoanService {
                     ResourceType.BOOK.toString(),
                     "id",
                     bookId.toString());
+        }
+
+        // check if book is still under loan and not yet return
+        List<Loan> loanedBook = this.loanRepository.findByBookId(bookId);
+        if (loanedBook != null && !loanedBook.isEmpty()) {
+            throw new OutstandingBookException("Book "+bookId+" is not yet returned!");
         }
 
         return existingO.get();

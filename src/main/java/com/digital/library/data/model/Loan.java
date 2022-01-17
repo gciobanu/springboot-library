@@ -22,15 +22,15 @@ public class Loan implements Serializable {
     private Long id;
 
     @NonNull
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne
     @JoinColumn(name = "book_id", referencedColumnName = "id")
     @JsonIgnoreProperties("loan")
     private Book book;
 
     @NonNull
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "usermember_id", referencedColumnName = "id")
-    @JsonIgnoreProperties("loan")
+    @ManyToOne
+    @JoinColumn(name = "usermember_id", referencedColumnName = "id", nullable = false)
+    @JsonIgnoreProperties("loanSet")
     private UserMember usermember;
 
     @NonNull
