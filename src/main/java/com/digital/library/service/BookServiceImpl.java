@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -84,7 +85,7 @@ public class BookServiceImpl implements BookService {
     public SearchResponse search(String title, String author, Integer pageNo, Integer pageSize, String sortBy) {
         Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by(sortBy).ascending());
 
-        Page<Book> pagedResult = this.bookRepository.findByTitleOrAuthorContains(title, author, paging);
+        Page<Book> pagedResult = this.bookRepository.findAll(Specification.where(hasAuthor(author)).and(titleContains(title)), paging);
 
         SearchResponse.SearchResponseBuilder response = SearchResponse.builder();
 
@@ -106,5 +107,13 @@ public class BookServiceImpl implements BookService {
     @Override
     public List<Book> findAll() {
         return this.bookRepository.findAll();
+    }
+
+    static Specification<Book> hasAuthor(String author) {
+        return (book, cq, cb) -> cb.like(cb.lower(book.get("author")), "%" + author.toLowerCase()+ "%");
+    }
+
+    static Specification<Book> titleContains(String title) {
+        return (book, cq, cb) -> cb.like(cb.lower(book.get("title")), "%" + title.toLowerCase() + "%");
     }
 }
