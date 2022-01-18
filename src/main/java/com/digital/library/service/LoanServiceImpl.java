@@ -96,9 +96,9 @@ public class LoanServiceImpl implements LoanService {
     /**
      * Check if user member exists and if so return his details
      *
-     * @param userId
+     * @param userId user member ID
      * @return UserMember
-     * @throws ResourceNotFoundException
+     * @throws ResourceNotFoundException exception when user not found
      */
     private UserMember getUserMemberById(Integer userId) throws ResourceNotFoundException {
         // does user ID exists ?
@@ -116,9 +116,9 @@ public class LoanServiceImpl implements LoanService {
     /**
      * Check for user member if any outstanding loan or if number of books reached the maximum allowed for loaning
      *
-     * @param userMember
+     * @param userMember user member
      * @return boolean false if no outstanding loan or if number of maximum allowed books is not reached
-     * @throws OutstandingBookException
+     * @throws OutstandingBookException book(s) not return yet exception
      */
     private boolean isOutstandingLoanForUserMember(UserMember userMember) throws OutstandingBookException {
         // check is valid for new book loan ?
@@ -128,7 +128,7 @@ public class LoanServiceImpl implements LoanService {
             return false;
         }
 
-        if (outstandingLoan != null && outstandingLoan.size() >= MAX_BOOKS_NO_IN_LOAN) {
+        if (outstandingLoan.size() >= MAX_BOOKS_NO_IN_LOAN) {
             //TODO new exception type for this case  ?
             throw new OutstandingBookException("No more than " + MAX_BOOKS_NO_IN_LOAN + " books are allowed!");
         }
@@ -136,7 +136,7 @@ public class LoanServiceImpl implements LoanService {
         for (Loan loan : outstandingLoan) {
             // check each loan date if it has more than 30 days + 1 passed (+1 to allow returning and new loan on the 30th day)
             // if any outstanding book after 30 days, do not allow new loan
-            if (loan != null && loan.getLoanDate() != null &&
+            if (loan != null &&
                     loan.getLoanDate().plusDays(MAX_DAYS_ALLOWED_FOR_LOAN).isBefore(LocalDate.now().plusDays(1))) {
                 throw new OutstandingBookException("This user member has outstanding books to return!");
             }
@@ -147,9 +147,9 @@ public class LoanServiceImpl implements LoanService {
     /**
      * Check if book member exists and if so return its details
      *
-     * @param bookId
+     * @param bookId book identifier
      * @return Book
-     * @throws ResourceNotFoundException
+     * @throws ResourceNotFoundException book not found
      */
     private Book checkBookExistsById(Integer bookId) throws ResourceNotFoundException, OutstandingBookException {
         if (bookId == null) {
