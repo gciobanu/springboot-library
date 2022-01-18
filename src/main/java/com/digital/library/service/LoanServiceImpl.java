@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class LoanServiceImpl implements LoanService {
@@ -81,7 +82,8 @@ public class LoanServiceImpl implements LoanService {
             throw new ResourceNotFoundException(
                     ResourceType.BOOK.toString(),
                     "id",
-                    loanRequest.getBooks().toString());
+                    loanRequest.getBooks().stream().map(b -> b.getId()).collect(Collectors.toList())
+                            .toString());
         }
 
         try {
