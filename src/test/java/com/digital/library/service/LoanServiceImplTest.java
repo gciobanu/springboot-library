@@ -6,6 +6,7 @@ import com.digital.library.data.model.Category;
 import com.digital.library.data.model.Loan;
 import com.digital.library.data.model.UserMember;
 import com.digital.library.data.payloads.LoanRequest;
+import com.digital.library.data.payloads.ReturnLoanRequest;
 import com.digital.library.data.repository.BookRepository;
 import com.digital.library.data.repository.LoanRepository;
 import com.digital.library.data.repository.UserMemberRepository;
@@ -324,20 +325,130 @@ public class LoanServiceImplTest {
     }
 
     @Test
-    public void returnOneBook_OK() {
+    public void returnOneBookNullReturnDate_OK() {
+        ReturnLoanRequest returnLoan = new ReturnLoanRequest();
+        returnLoan.setBooks(Arrays.asList(b1));
+        returnLoan.setUserMember(user1);
 
+        List<Loan> currentLoans = new ArrayList<>();
+        Loan loan = new Loan();
+        loan.setReturnDate(null);
+        loan.setLoanDate(LocalDate.now().minusDays(40));
+        loan.setUsermember(user1);
+        loan.setBook(b1);
+        currentLoans.add(loan);
+
+        Mockito.when(userMemberRepository.findById(1)).thenReturn(Optional.ofNullable(user1));
+        Mockito.when(loanRepository.findByUsermemberAndReturnDateIsNull(user1)).thenReturn(currentLoans);
+        Mockito.when(loanRepository.saveAll(Mockito.any())).thenReturn(currentLoans);
+
+        try {
+            loanService.returnBook(returnLoan);
+        } catch (ResourceNotFoundException e) {
+            e.printStackTrace();
+            Assert.fail();
+        } catch (ApiException e) {
+            e.printStackTrace();
+            Assert.fail();
+        }
+
+        Mockito.verify(loanRepository, Mockito.times(1)).saveAll(Mockito.any());
     }
 
-    public void returnThreeBooks_OK() {
+    @Test
+    public void returnThreeBooksWithReturnDate_OK() {
+        ReturnLoanRequest returnLoan = new ReturnLoanRequest();
+        List<Book> books = new ArrayList<>();
+        Book b_1 = addBookToList(1, books);
+        Book b_2 = addBookToList(2,  books);
+        Book b_3 = addBookToList(3, books);
+        returnLoan.setBooks(books);
+        returnLoan.setUserMember(user1);
+        returnLoan.setReturnLoanDate(LocalDate.now().minusDays(3)); // in case the librarian missed flagging as returned
 
+        List<Loan> currentLoans = new ArrayList<>();
+        for (int i=0; i< books.size(); i++) {
+            Loan loan = new Loan();
+            loan.setReturnDate(null);
+            loan.setLoanDate(LocalDate.now().minusDays(30-i));
+            loan.setUsermember(user1);
+            loan.setBook(books.get(0));
+            currentLoans.add(loan);
+        }
+
+        Mockito.when(userMemberRepository.findById(1)).thenReturn(Optional.ofNullable(user1));
+        Mockito.when(loanRepository.findByUsermemberAndReturnDateIsNull(user1)).thenReturn(currentLoans);
+        Mockito.when(loanRepository.saveAll(Mockito.any())).thenReturn(currentLoans);
+
+        try {
+            loanService.returnBook(returnLoan);
+        } catch (ResourceNotFoundException e) {
+            e.printStackTrace();
+            Assert.fail();
+        } catch (ApiException e) {
+            e.printStackTrace();
+            Assert.fail();
+        }
+
+        Mockito.verify(loanRepository, Mockito.times(1)).saveAll(Mockito.any());
     }
 
+    @Test
     public void returnWrongBook_NotFoundError() {
+        ReturnLoanRequest returnLoan = new ReturnLoanRequest();
+        returnLoan.setBooks(Arrays.asList(b1));
+        returnLoan.setUserMember(user1);
 
+        List<Loan> currentLoans = new ArrayList<>();
+        Loan loan = new Loan();
+        loan.setReturnDate(null);
+        loan.setLoanDate(LocalDate.now().minusDays(40));
+        loan.setUsermember(user1);
+        loan.setBook(addBookToList(2, null));
+        currentLoans.add(loan);
+
+        Mockito.when(userMemberRepository.findById(1)).thenReturn(Optional.ofNullable(user1));
+        Mockito.when(loanRepository.findByUsermemberAndReturnDateIsNull(user1)).thenReturn(currentLoans);
+        Mockito.when(loanRepository.saveAll(Mockito.any())).thenReturn(currentLoans);
+
+        try {
+            loanService.returnBook(returnLoan);
+            Assert.fail();
+        } catch (ResourceNotFoundException e) {
+            Assert.assertEquals(
+                    "Not Found the resource " + ResourceType.BOOK.name() +
+                            " with property:id = [1]",
+                    e.getMessage()
+            );
+        } catch (ApiException e) {
+            Assert.fail();
+        }
+
+        Mockito.verify(loanRepository, Mockito.times(0)).saveAll(Mockito.any());
     }
 
+    @Test
     public void returnWithUnkownUserMember_NotFoundError() {
+        ReturnLoanRequest returnLoan = new ReturnLoanRequest();
+        returnLoan.setBooks(Arrays.asList(b1));
+        returnLoan.setUserMember(user1);
 
+        Mockito.when(userMemberRepository.findById(1)).thenReturn(Optional.empty());
+
+        try {
+            loanService.returnBook(returnLoan);
+            Assert.fail();
+        } catch (ResourceNotFoundException e) {
+            Assert.assertEquals(
+                    "Not Found the resource " + ResourceType.USER.name() +
+                            " with property:id = 1",
+                    e.getMessage()
+            );
+        } catch (ApiException e) {
+            Assert.fail();
+        }
+
+        Mockito.verify(loanRepository, Mockito.times(0)).saveAll(Mockito.any());
     }
 
     private Book addBookToList(Integer id, List<Book> books) {

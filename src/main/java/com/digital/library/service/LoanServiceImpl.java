@@ -70,7 +70,12 @@ public class LoanServiceImpl implements LoanService {
         for (Loan loan : outstandingLoan) {
             for (Book book : loanRequest.getBooks()) {
                 if (loan.getBook().getId() == book.getId()) {
-                    loan.setReturnDate(LocalDate.now());
+                    if (loanRequest.getReturnLoanDate() == null) {
+                        loan.setReturnDate(LocalDate.now());
+                    } else {
+                        loan.setReturnDate(loanRequest.getReturnLoanDate());
+                    }
+
                     returnLoans.add(loan);
                 }
             }
@@ -79,7 +84,7 @@ public class LoanServiceImpl implements LoanService {
         // books for return may not be valid (no corresponding "open" loan)
         if (returnLoans.isEmpty()) {
             throw new ResourceNotFoundException(
-                    ResourceType.BOOK.toString(),
+                    ResourceType.BOOK.name(),
                     "id",
                     loanRequest.getBooks().stream().map(b -> b.getId()).collect(Collectors.toList())
                             .toString());
@@ -102,9 +107,9 @@ public class LoanServiceImpl implements LoanService {
     private UserMember getUserMemberById(Integer userId) throws ResourceNotFoundException {
         // does user ID exists ?
         Optional<UserMember> existingUserO = userMemberRepository.findById(userId);
-        if (existingUserO.isEmpty()) {
+        if (existingUserO == null || existingUserO.isEmpty()) {
             throw new ResourceNotFoundException(
-                    ResourceType.USER.toString(),
+                    ResourceType.USER.name(),
                     "id",
                     userId.toString());
         }
