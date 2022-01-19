@@ -96,7 +96,7 @@ public class BookServiceImpl implements BookService {
 
 
         } else {
-            response.books(new ArrayList<Book>())
+            response.books(new ArrayList<>())
                     .numberOfPages(0)
                     .numberOfResults(0);
         }
