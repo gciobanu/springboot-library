@@ -30,17 +30,17 @@ public class LoanServiceImpl implements LoanService {
     @Autowired
     BookRepository bookRepository;
 
-    private static final int MAX_BOOKS_NO_IN_LOAN = 3;
-    private static final int MAX_DAYS_ALLOWED_FOR_LOAN = 30; //just an example
+    public static final int MAX_BOOKS_NO_IN_LOAN = 3;
+    public static final int MAX_DAYS_ALLOWED_FOR_LOAN = 30; //just an example
 
     @Override
     public void loanBook(LoanRequest loanRequest) throws OutstandingBookException, ResourceNotFoundException, ApiException {
         UserMember userMember = this.getUserMemberById(loanRequest.getUserMember().getId());
 
-        if (!this.isOutstandingLoanForUserMember(userMember)) {
-            List<Book> books = loanRequest.getBooks();
+        List<Book> books = loanRequest.getBooks();
 
-            for (Book book: books) {
+        for (Book book: books) {
+            if (!this.isOutstandingLoanForUserMember(userMember)) {
                 // does book exists ?
                 // maybe use a code (to add in entity) for identifying the book here instead of ID?
                 Book existingBook = this.checkBookExistsById(book.getId());
@@ -56,7 +56,6 @@ public class LoanServiceImpl implements LoanService {
                     //e.printStackTrace();
                     throw new ApiException("Error loaning the book with ID: " + book.getId());
                 }
-
             }
         }
     }
@@ -154,15 +153,15 @@ public class LoanServiceImpl implements LoanService {
     private Book checkBookExistsById(Integer bookId) throws ResourceNotFoundException, OutstandingBookException {
         if (bookId == null) {
             throw new ResourceNotFoundException( //todo new custom bad request exception?
-                    ResourceType.BOOK.toString(),
+                    ResourceType.BOOK.name(),
                     "id",
                     "");
         }
         // does book exists ?
         Optional<Book> existingO = bookRepository.findById(bookId);
-        if (existingO.isEmpty()) {
+        if (existingO == null || existingO.isEmpty()) {
             throw new ResourceNotFoundException(
-                    ResourceType.BOOK.toString(),
+                    ResourceType.BOOK.name(),
                     "id",
                     bookId.toString());
         }
