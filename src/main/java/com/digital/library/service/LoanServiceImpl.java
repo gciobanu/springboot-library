@@ -5,6 +5,7 @@ import com.digital.library.data.model.Book;
 import com.digital.library.data.model.Loan;
 import com.digital.library.data.model.UserMember;
 import com.digital.library.data.payloads.LoanRequest;
+import com.digital.library.data.payloads.MessageResponse;
 import com.digital.library.data.payloads.ReturnLoanRequest;
 import com.digital.library.data.repository.BookRepository;
 import com.digital.library.data.repository.LoanRepository;
@@ -34,7 +35,7 @@ public class LoanServiceImpl implements LoanService {
     public static final int MAX_DAYS_ALLOWED_FOR_LOAN = 30; //just an example
 
     @Override
-    public void loanBook(LoanRequest loanRequest) throws OutstandingBookException, ResourceNotFoundException, ApiException {
+    public MessageResponse loanBook(LoanRequest loanRequest) throws OutstandingBookException, ResourceNotFoundException, ApiException {
         UserMember userMember = this.getUserMemberById(loanRequest.getUserMember().getId());
 
         List<Book> books = loanRequest.getBooks();
@@ -58,10 +59,11 @@ public class LoanServiceImpl implements LoanService {
                 }
             }
         }
+        return new MessageResponse("Book(s) loaned.");
     }
 
     @Override
-    public void returnBook(ReturnLoanRequest loanRequest) throws ResourceNotFoundException, ApiException {
+    public MessageResponse returnBook(ReturnLoanRequest loanRequest) throws ResourceNotFoundException, ApiException {
         UserMember userMember = this.getUserMemberById(loanRequest.getUserMember().getId());
 
         List<Loan> outstandingLoan = loanRepository.findByUsermemberAndReturnDateIsNull(userMember);
@@ -92,6 +94,7 @@ public class LoanServiceImpl implements LoanService {
 
         try {
             loanRepository.saveAll(returnLoans);
+            return new MessageResponse("Book(s) return confirmed.");
         } catch (Exception e) {
             throw new ApiException("Error on books return!");
         }

@@ -10,10 +10,7 @@ import com.digital.library.service.LoanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/library/loan")
@@ -26,11 +23,12 @@ public class LoanController {
         if (request == null) {
             return new ResponseEntity<>(new MessageResponse("No request data was sent!"), HttpStatus.BAD_REQUEST);
         }
-        if (request.getUserMember().getId() == null) {
+        if (request.getUserMember() == null || request.getUserMember().getId() == null) {
             return new ResponseEntity<>(new MessageResponse("No user member ID was sent!"), HttpStatus.BAD_REQUEST);
         }
         try {
-            this.loanService.loanBook(request);
+            MessageResponse response = this.loanService.loanBook(request);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (OutstandingBookException e) {
             return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.CONFLICT);
         } catch (ResourceNotFoundException e) {
@@ -38,20 +36,16 @@ public class LoanController {
         } catch (ApiException e) {
             return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        return new ResponseEntity<>(new MessageResponse("Book(s) loaned."), HttpStatus.CREATED);
     }
 
-    @PostMapping("/return")
+    @PutMapping("/return")
     public ResponseEntity<MessageResponse> returnBook(@RequestBody ReturnLoanRequest request) {
         try {
-            this.loanService.returnBook(request);
+            return new ResponseEntity<>(this.loanService.returnBook(request), HttpStatus.OK);
         } catch (ResourceNotFoundException e) {
             return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
         } catch (ApiException e) {
             return new ResponseEntity<>(new MessageResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        return new ResponseEntity<>(new MessageResponse("Book(s) return confirmed."), HttpStatus.CREATED);
     }
 }

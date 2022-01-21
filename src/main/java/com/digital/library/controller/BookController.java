@@ -75,8 +75,8 @@ public class BookController {
     @DeleteMapping("/{id}")
     public ResponseEntity<MessageResponse> deleteBook(@PathVariable("id") Integer id) {
         try {
-            this.bookService.delete(id);
-            return new ResponseEntity<>(HttpStatus.OK);
+            MessageResponse response = this.bookService.delete(id);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (ApiException e) {
             MessageResponse response = new MessageResponse(e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);

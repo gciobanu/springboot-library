@@ -17,7 +17,7 @@ public interface BookService {
 
     MessageResponse update(Integer bookId, BookRequest book) throws  ResourceNotFoundException, ApiException;
 
-    void delete(Integer bookId) throws ApiException ;
+    MessageResponse delete(Integer bookId) throws ApiException ;
 
     Book findById(Integer bookId) throws ResourceNotFoundException;
 

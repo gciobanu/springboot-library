@@ -62,9 +62,10 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public void delete(Integer bookId) throws ApiException {
+    public MessageResponse delete(Integer bookId) throws ApiException {
         try {
             this.bookRepository.deleteById(bookId);
+            return new MessageResponse("Book is removed.");
         } catch (Exception e) {
             throw new ApiException("Error removing the book.");
         }
